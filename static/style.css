@@ -1,0 +1,108 @@
+body {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    background: linear-gradient(120deg, #e0eafc, #cfdef3);
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+}
+
+.container {
+    width: 100%;
+    max-width: 480px;
+    margin: 48px auto;
+    background: #fff;
+    padding: 32px 28px 28px 28px;
+    border-radius: 18px;
+    box-shadow: 0 8px 32px rgba(60, 80, 180, 0.10), 0 1.5px 4px rgba(0,0,0,0.04);
+}
+
+h1 {
+    text-align: center;
+    color: #2d3a4a;
+    font-size: 2.1rem;
+    margin-bottom: 24px;
+    letter-spacing: 1px;
+}
+
+form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+label {
+    margin-top: 6px;
+    color: #3a4a5d;
+    font-weight: 500;
+}
+
+input[type="text"],
+input[type="date"],
+input[type="time"] {
+    padding: 10px 12px;
+    border: 1.5px solid #cfd8dc;
+    border-radius: 6px;
+    font-size: 1rem;
+    background: #f7fafc;
+    transition: border 0.2s;
+}
+input:focus {
+    border-color: #7ea6f6;
+    outline: none;
+}
+
+button {
+    margin-top: 18px;
+    padding: 12px 0;
+    background: linear-gradient(90deg, #7ea6f6, #5e8bfa);
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(94,139,250,0.08);
+    transition: background 0.2s, transform 0.1s;
+}
+button:hover {
+    background: linear-gradient(90deg, #5e8bfa, #7ea6f6);
+    transform: translateY(-2px) scale(1.02);
+}
+
+a {
+    color: #5e8bfa;
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.2s;
+}
+a:hover {
+    color: #2d3a4a;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 24px;
+    background: #f7fafc;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(60, 80, 180, 0.06);
+}
+th, td {
+    padding: 12px 8px;
+    text-align: center;
+}
+th {
+    background: #e0eafc;
+    color: #2d3a4a;
+    font-weight: 600;
+    font-size: 1rem;
+    border-bottom: 2px solid #cfd8dc;
+}
+tr:nth-child(even) {
+    background: #f0f4fa;
+}
+tr:hover {
+    background: #e8f0fe;
+    transition: background 0.2s;
+}

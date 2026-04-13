@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Small Clinic Appointment Booking</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>Small Clinic Appointment Booking</h1>
+        <form action="/book" method="POST">
+            <label>Patient Name:</label>
+            <input type="text" name="patient_name" required>
+
+            <label>Appointment Date:</label>
+            <input type="date" name="appointment_date" required>
+
+            <label>Appointment Time:</label>
+            <input type="time" name="appointment_time" required>
+
+            <button type="submit">Book Appointment</button>
+        </form>
+
+        <p><a href="/admin">View All Appointments</a></p>
+    </div>
+</body>
+</html>
