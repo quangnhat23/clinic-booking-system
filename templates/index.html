@@ -1,27 +1,44 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Small Clinic Appointment Booking</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Book an appointment — Clinic</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-    <script src="{{ url_for('static', filename='script.js') }}"></script>
 </head>
 <body>
-    <div class="container">
-        <h1>Small Clinic Appointment Booking</h1>
-        <form action="/book" method="POST">
-            <label>Patient Name:</label>
-            <input type="text" name="patient_name" required>
+    <div class="page">
+        <header class="site-header">
+            <p class="site-tag">Clinic booking</p>
+            <h1>Book an appointment</h1>
+            <p class="lead">Enter your details and choose a date and time. You’ll see all bookings on the admin page after you submit.</p>
+        </header>
 
-            <label>Appointment Date:</label>
-            <input type="date" name="appointment_date" required>
+        <main class="card">
+            <form action="/book" method="POST" class="booking-form">
+                <div class="field">
+                    <label for="patient_name">Patient name</label>
+                    <input type="text" id="patient_name" name="patient_name" required autocomplete="name" placeholder="e.g. Jane Doe">
+                </div>
 
-            <label>Appointment Time:</label>
-            <input type="time" name="appointment_time" required>
+                <div class="field-row">
+                    <div class="field">
+                        <label for="appointment_date">Date</label>
+                        <input type="date" id="appointment_date" name="appointment_date" required>
+                    </div>
+                    <div class="field">
+                        <label for="appointment_time">Time</label>
+                        <input type="time" id="appointment_time" name="appointment_time" required>
+                    </div>
+                </div>
 
-            <button type="submit">Book Appointment</button>
-        </form>
+                <button type="submit" class="btn btn-primary">Book appointment</button>
+            </form>
 
-        <p><a href="/admin">View All Appointments</a></p>
+            <footer class="card-footer">
+                <a class="link-muted" href="/admin">View all appointments →</a>
+            </footer>
+        </main>
     </div>
 </body>
 </html>

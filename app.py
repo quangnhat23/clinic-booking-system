@@ -61,5 +61,16 @@ def admin():
 
     return render_template("admin.html", appointments=appointments)
 
+
+@app.route("/admin/delete/<int:appointment_id>", methods=["POST"])
+def delete_appointment(appointment_id):
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM appointments_new WHERE id = %s", (appointment_id,))
+    conn.commit()
+    conn.close()
+    return redirect(url_for("admin"))
+
+
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)
