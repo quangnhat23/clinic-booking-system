@@ -1,22 +1,12 @@
 from flask import Flask, render_template, request, redirect, url_for
-import pymysql
 
 app = Flask(__name__)
 
-# Local MySQL connection settings
-DB_HOST = "localhost"
-DB_USER = "root"
-DB_PASSWORD = "letmein"
-DB_NAME = "clinic_db"
 
-def get_connection():
-    return pymysql.connect(
-        host=DB_HOST,
-        user=DB_USER,
-        password=DB_PASSWORD,
-        database=DB_NAME,
-        cursorclass=pymysql.cursors.DictCursor
-    )
+
+# In-memory storage for appointments
+appointments = []
+next_id = 1
 
 @app.route("/")
 def index():
@@ -28,47 +18,33 @@ def book():
     appointment_date = request.form["appointment_date"]
     appointment_time = request.form["appointment_time"]
 
-    conn = get_connection()
-    cursor = conn.cursor()
+    global next_id
+    # Check if time slot already exists
+    for appt in appointments:
+        if appt['appointment_date'] == appointment_date and appt['appointment_time'] == appointment_time:
+            return "This time slot is already booked. Go back and choose another time."
 
-    # check if time slot already exists
-    cursor.execute(
-        "SELECT * FROM appointments_new WHERE appointment_date=%s AND appointment_time=%s",
-        (appointment_date, appointment_time)
-    )
-    existing = cursor.fetchone()
-
-    if existing:
-        conn.close()
-        return "This time slot is already booked. Go back and choose another time."
-
-    cursor.execute(
-        "INSERT INTO appointments_new (patient_name, appointment_date, appointment_time) VALUES (%s, %s, %s)",
-        (patient_name, appointment_date, appointment_time)
-    )
-    conn.commit()
-    conn.close()
-
+    # Add new appointment
+    appointments.append({
+        'id': next_id,
+        'patient_name': patient_name,
+        'appointment_date': appointment_date,
+        'appointment_time': appointment_time
+    })
+    next_id += 1
     return redirect(url_for("admin"))
 
 @app.route("/admin")
 def admin():
-    conn = get_connection()
-    cursor = conn.cursor()
-    cursor.execute("SELECT * FROM appointments_new ORDER BY appointment_date, appointment_time")
-    appointments = cursor.fetchall()
-    conn.close()
-
-    return render_template("admin.html", appointments=appointments)
+    # Sort appointments by date and time
+    sorted_appointments = sorted(appointments, key=lambda x: (x['appointment_date'], x['appointment_time']))
+    return render_template("admin.html", appointments=sorted_appointments)
 
 
 @app.route("/admin/delete/<int:appointment_id>", methods=["POST"])
 def delete_appointment(appointment_id):
-    conn = get_connection()
-    cursor = conn.cursor()
-    cursor.execute("DELETE FROM appointments_new WHERE id = %s", (appointment_id,))
-    conn.commit()
-    conn.close()
+    global appointments
+    appointments = [appt for appt in appointments if appt['id'] != appointment_id]
     return redirect(url_for("admin"))
 
 
