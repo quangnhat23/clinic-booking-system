@@ -2,43 +2,47 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Book an appointment — Clinic</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clinic Booking</title>
+    <link rel="stylesheet" href="./assets/style.css">
 </head>
 <body>
     <div class="page">
         <header class="site-header">
             <p class="site-tag">Clinic booking</p>
             <h1>Book an appointment</h1>
-            <p class="lead">Enter your details and choose a date and time. You’ll see all bookings on the admin page after you submit.</p>
+            <p class="lead">Simple static website version. Data is stored in your browser.</p>
         </header>
 
         <main class="card">
-            <form action="/book" method="POST" class="booking-form">
+            <form id="booking-form" class="booking-form">
                 <div class="field">
                     <label for="patient_name">Patient name</label>
-                    <input type="text" id="patient_name" name="patient_name" required autocomplete="name" placeholder="e.g. Jane Doe">
+                    <input id="patient_name" name="patient_name" type="text" required placeholder="e.g. Jane Doe">
                 </div>
 
                 <div class="field-row">
                     <div class="field">
                         <label for="appointment_date">Date</label>
-                        <input type="date" id="appointment_date" name="appointment_date" required>
+                        <input id="appointment_date" name="appointment_date" type="date" required>
                     </div>
                     <div class="field">
                         <label for="appointment_time">Time</label>
-                        <input type="time" id="appointment_time" name="appointment_time" required>
+                        <input id="appointment_time" name="appointment_time" type="time" required>
                     </div>
                 </div>
+
+                <p id="message" class="message" aria-live="polite"></p>
 
                 <button type="submit" class="btn btn-primary">Book appointment</button>
             </form>
 
             <footer class="card-footer">
-                <a class="link-muted" href="/admin">View all appointments →</a>
+                <a class="link-muted" href="./admin.html">View all appointments →</a>
             </footer>
         </main>
     </div>
+
+    <script src="./assets/app.js"></script>
 </body>
 </html>

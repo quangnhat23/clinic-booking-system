@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clinic Booking Admin</title>
+    <link rel="stylesheet" href="./assets/style.css">
+</head>
+<body>
+    <div class="page page-wide">
+        <header class="site-header">
+            <p class="site-tag">Admin</p>
+            <h1>All appointments</h1>
+            <p class="lead">Sorted by date and time. Stored in local browser storage.</p>
+        </header>
+
+        <main class="card card-pad">
+            <div class="table-wrap">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Patient</th>
+                            <th>Date</th>
+                            <th>Time</th>
+                            <th class="th-actions">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="appointments-body"></tbody>
+                </table>
+            </div>
+            <p id="empty-state" class="empty-state">No appointments yet. Book one from the home page.</p>
+
+            <footer class="card-footer">
+                <a class="link-muted" href="./index.html">← Back to booking</a>
+            </footer>
+        </main>
+    </div>
+
+    <script src="./assets/app.js"></script>
+</body>
+</html>
