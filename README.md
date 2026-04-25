@@ -17,11 +17,6 @@ This repository contains a clinic appointment booking web app prepared for CS 62
   - `admin.html`: appointment management
   - `assets/style.css`: styling
   - `assets/app.js`: app logic
-- `docs/`
-  - `PROJECT_DOCUMENTATION.md`
-  - `INSTALLATION_EXECUTION_GUIDE.md`
-  - `SERVICE_RELATIONSHIP.md`
-  - `TEAM_INFO_TEMPLATE.txt`
 - `server/`
   - Legacy API prototype from earlier iteration (not required for final static mode)
 
