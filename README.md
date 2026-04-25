@@ -30,7 +30,6 @@ This repository contains a clinic appointment booking web app prepared for CS 62
 See:
 
 - `website/README.md`
-- `docs/INSTALLATION_EXECUTION_GUIDE.md`
 
 ## Notes
 
