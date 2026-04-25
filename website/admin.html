@@ -9,12 +9,22 @@
 <body>
     <div class="page page-wide">
         <header class="site-header">
-            <p class="site-tag">Admin</p>
-            <h1>All appointments</h1>
-            <p class="lead">Sorted by date and time. Stored in local browser storage.</p>
+            <p class="site-tag">Appointments</p>
+            <h1>My appointments</h1>
+            <p class="lead">Cancel or reschedule your bookings. You must be logged in.</p>
         </header>
 
         <main class="card card-pad">
+            <div class="card-topbar">
+                <div>
+                    <p id="auth-status" class="auth-status">Not signed in</p>
+                </div>
+                <div class="topbar-actions">
+                    <a class="link-muted" href="./index.html">← Back to booking</a>
+                    <button id="logout-btn" class="btn btn-secondary btn-sm" type="button">Log out</button>
+                </div>
+            </div>
+
             <div class="table-wrap">
                 <table class="data-table">
                     <thead>
@@ -23,16 +33,17 @@
                             <th>Patient</th>
                             <th>Date</th>
                             <th>Time</th>
+                            <th>Status</th>
                             <th class="th-actions">Actions</th>
                         </tr>
                     </thead>
                     <tbody id="appointments-body"></tbody>
                 </table>
             </div>
-            <p id="empty-state" class="empty-state">No appointments yet. Book one from the home page.</p>
+            <p id="empty-state" class="empty-state">No appointments yet. Book one from the booking page.</p>
 
             <footer class="card-footer">
-                <a class="link-muted" href="./index.html">← Back to booking</a>
+                <p id="message" class="message" aria-live="polite"></p>
             </footer>
         </main>
     </div>

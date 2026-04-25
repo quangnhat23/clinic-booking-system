@@ -11,14 +11,59 @@
         <header class="site-header">
             <p class="site-tag">Clinic booking</p>
             <h1>Book an appointment</h1>
-            <p class="lead">Simple static website version. Data is stored in your browser.</p>
+            <p class="lead">Register or log in, pick a date, then choose an available time slot.</p>
         </header>
 
         <main class="card">
-            <form id="booking-form" class="booking-form">
+            <div class="booking-form">
+                <section class="auth-card">
+                    <div class="auth-header">
+                        <p class="auth-title">Account</p>
+                        <p id="auth-status" class="auth-status">Not signed in</p>
+                    </div>
+
+                    <div id="auth-forms" class="auth-forms">
+                        <form id="register-form" class="auth-form">
+                            <p class="auth-form-title">Register</p>
+                            <div class="field">
+                                <label for="reg_name">Name</label>
+                                <input id="reg_name" name="name" type="text" required placeholder="e.g. Jane Doe">
+                            </div>
+                            <div class="field">
+                                <label for="reg_email">Email</label>
+                                <input id="reg_email" name="email" type="text" required placeholder="e.g. jane@example.com">
+                            </div>
+                            <div class="field">
+                                <label for="reg_password">Password</label>
+                                <input id="reg_password" name="password" type="password" required placeholder="at least 6 characters">
+                            </div>
+                            <button type="submit" class="btn btn-secondary">Create account</button>
+                        </form>
+
+                        <form id="login-form" class="auth-form">
+                            <p class="auth-form-title">Log in</p>
+                            <div class="field">
+                                <label for="login_email">Email</label>
+                                <input id="login_email" name="email" type="text" required placeholder="e.g. jane@example.com">
+                            </div>
+                            <div class="field">
+                                <label for="login_password">Password</label>
+                                <input id="login_password" name="password" type="password" required placeholder="your password">
+                            </div>
+                            <button type="submit" class="btn btn-secondary">Log in</button>
+                        </form>
+                    </div>
+
+                    <div id="auth-actions" class="auth-actions" style="display:none;">
+                        <button id="logout-btn" type="button" class="btn btn-secondary">Log out</button>
+                        <a class="link-muted" href="./admin.html">Manage my appointments →</a>
+                    </div>
+                </section>
+
+                <form id="booking-form" class="booking-form-inner">
                 <div class="field">
                     <label for="patient_name">Patient name</label>
-                    <input id="patient_name" name="patient_name" type="text" required placeholder="e.g. Jane Doe">
+                    <input id="patient_name" name="patient_name" type="text" required placeholder="Auto-filled from your account" disabled>
                 </div>
 
                 <div class="field-row">
@@ -28,18 +73,21 @@
                     </div>
                     <div class="field">
                         <label for="appointment_time">Time</label>
-                        <input id="appointment_time" name="appointment_time" type="time" required>
+                        <select id="appointment_time" name="appointment_time" required>
+                            <option value="">Select a date first</option>
+                        </select>
                     </div>
                 </div>
 
                 <p id="message" class="message" aria-live="polite"></p>
 
                 <button type="submit" class="btn btn-primary">Book appointment</button>
-            </form>
+                </form>
 
             <footer class="card-footer">
-                <a class="link-muted" href="./admin.html">View all appointments →</a>
+                <a class="link-muted" href="./admin.html">Manage my appointments →</a>
             </footer>
+            </div>
         </main>
     </div>
 

@@ -73,7 +73,7 @@ Use the S3 static website endpoint shown in Properties.
 For `us-east-1`:
 
 ```text
-http://clinicdeployment.s3-website-us-east-1.amazonaws.com
+http://clinicdeployment.s3-website-us-east-1.amazonaws.com/
 ```
 
 ## Optional CLI deployment
