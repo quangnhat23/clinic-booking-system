@@ -1,41 +1,46 @@
-# Static Clinic Website (S3)
+# Clinic Booking Website (Static S3 Mode)
 
-This folder contains the static clinic booking site:
+This folder contains the final frontend used for submission:
 
-- `index.html` - booking form
-- `admin.html` - view and delete bookings
-- `assets/style.css` - styles
-- `assets/app.js` - localStorage logic
+- `index.html`: admin login + create appointment
+- `admin.html`: manage all appointments (cancel/reschedule)
+- `assets/style.css`: UI styles
+- `assets/app.js`: auth, slot logic, localStorage, and appointment actions
 
-## Data behavior
+## Final app behavior
 
-- No backend is used.
-- Appointments are saved in browser `localStorage`.
-- Data persists after browser close on the same browser/device.
-- Data is not shared across different devices or browsers.
+- Deployment mode: static website only (no runtime backend required)
+- Authentication: one hardcoded admin account
+  - Email: `admin@clinic.demo`
+  - Password: `admin123`
+- Booking: admin types patient name and books a time slot
+- Time slots: 30-minute intervals from `09:00` to `17:00`
+- Conflict prevention: booked date/time slots are unavailable for new bookings
+- Appointment actions: cancel and reschedule from `admin.html`
+- Data storage: browser `localStorage` key `clinic_appointments_v1`
 
-## S3 deployment guide (console-first)
+## S3 deployment (console-only)
 
-### 1) Create bucket
+### 1) Create or open bucket
 
-1. AWS Console -> S3 -> Create bucket
-2. Bucket name: `clinicdeployment` (or your own unique name)
+1. AWS Console -> S3 -> Create bucket (or open existing bucket)
+2. Recommended name: `clinicdeployment` (or unique equivalent)
 3. Choose region
-4. For public website hosting, disable "Block all public access" for this bucket
-5. Create bucket
 
 ### 2) Upload website files
 
-Inside bucket `clinicdeployment` -> Objects -> Upload:
-
-- Upload files: `index.html`, `admin.html`
-- Upload folder: `assets/`
-
-After upload, bucket root should contain:
+Upload these from this folder:
 
 - `index.html`
 - `admin.html`
-- `assets/` with `style.css` and `app.js`
+- `assets/` (folder)
+
+Bucket root must contain:
+
+- `index.html`
+- `admin.html`
+- `assets/style.css`
+- `assets/app.js`
 
 ### 3) Enable static website hosting
 
@@ -45,7 +50,7 @@ Bucket -> Properties -> Static website hosting:
 - Index document: `index.html`
 - Error document: `index.html`
 
-### 4) Allow public read (if public website is required)
+### 4) Public read policy (if required)
 
 Bucket -> Permissions -> Bucket policy:
 
@@ -64,28 +69,25 @@ Bucket -> Permissions -> Bucket policy:
 }
 ```
 
-If policy validation fails with `access-analyzer:ValidatePolicy`, this can happen in lab roles. Use save/apply anyway if available.
+In Learner Lab, policy edits may be restricted by role guardrails.
 
-### 5) Open the website
+### 5) Open website
 
-Use the S3 static website endpoint shown in Properties.
-
-For `us-east-1`:
+Use the S3 static website endpoint shown in bucket properties, for example:
 
 ```text
 http://clinicdeployment.s3-website-us-east-1.amazonaws.com/
 ```
 
-## Optional CLI deployment
+## IAM note for Learner Lab
 
-From project root:
-
-```powershell
-aws s3 sync .\website s3://clinicdeployment --delete
-```
+- No separate IAM user is required for this project.
+- Use the temporary Learner Lab role/session in AWS Console.
+- If policy changes fail with a generic error, this is often a lab permission limitation.
 
 ## Troubleshooting
 
-- `403 AccessDenied`: bucket is still private or bucket policy/public access settings are blocking read.
-- `404 NoSuchKey (index.html)`: `index.html` is missing at bucket root or uploaded to wrong path.
-- Styles/scripts missing: ensure `assets/` exists in bucket root and includes `style.css` and `app.js`.
+- `403 AccessDenied`: bucket policy/public access block is preventing object read.
+- `404 NoSuchKey`: files uploaded to wrong path; `index.html` must be at bucket root.
+- Missing styles/scripts: verify `assets/` exists in bucket root with `style.css` and `app.js`.
+- Data not shared across devices: expected; `localStorage` is browser/device specific.

@@ -1,46 +1,80 @@
 (function () {
-    const API_BASE = "";
-    const TOKEN_KEY = "clinic_token_v1";
-    const USER_KEY = "clinic_user_v1";
+    const STORAGE_KEY = "clinic_appointments_v1";
+    const AUTH_STORAGE_KEY = "clinic_admin_session_v1";
+    const ADMIN_USER = {
+        name: "Admin",
+        email: "admin@clinic.demo",
+        password: "admin123"
+    };
+    let currentUser = null;
 
-    function getToken() {
-        return localStorage.getItem(TOKEN_KEY) || "";
+    function loadAppointments() {
+        try {
+            const raw = localStorage.getItem(STORAGE_KEY);
+            return raw ? JSON.parse(raw) : [];
+        } catch {
+            return [];
+        }
     }
 
-    function getUser() {
+    function saveAppointments(appointments) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(appointments));
+    }
+
+    function loadSession() {
         try {
-            const raw = localStorage.getItem(USER_KEY);
+            const raw = localStorage.getItem(AUTH_STORAGE_KEY);
             return raw ? JSON.parse(raw) : null;
         } catch {
             return null;
         }
     }
 
-    function setAuth(token, user) {
-        localStorage.setItem(TOKEN_KEY, token);
-        localStorage.setItem(USER_KEY, JSON.stringify(user));
-    }
-
-    function clearAuth() {
-        localStorage.removeItem(TOKEN_KEY);
-        localStorage.removeItem(USER_KEY);
-    }
-
-    async function api(path, options) {
-        const token = getToken();
-        const headers = Object.assign(
-            { "Content-Type": "application/json" },
-            options?.headers || {},
-            token ? { Authorization: `Bearer ${token}` } : {}
-        );
-
-        const res = await fetch(`${API_BASE}${path}`, Object.assign({}, options, { headers }));
-        const data = await res.json().catch(() => ({}));
-        if (!res.ok) {
-            const msg = data?.error || `Request failed (${res.status})`;
-            throw new Error(msg);
+    function saveSession(user) {
+        if (!user) {
+            localStorage.removeItem(AUTH_STORAGE_KEY);
+            return;
         }
-        return data;
+        localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(user));
+    }
+
+    function nextId(appointments) {
+        if (!appointments.length) return 1;
+        return Math.max(...appointments.map((a) => Number(a.id) || 0)) + 1;
+    }
+
+    function sortAppointments(appointments) {
+        return [...appointments].sort((a, b) => {
+            const aKey = `${a.appointment_date} ${a.appointment_time}`;
+            const bKey = `${b.appointment_date} ${b.appointment_time}`;
+            return aKey.localeCompare(bKey);
+        });
+    }
+
+    function withinClinicHours(time) {
+        if (!/^\d{2}:\d{2}$/.test(time)) return false;
+        const parts = time.split(":").map(Number);
+        const minutes = parts[0] * 60 + parts[1];
+        return minutes >= 540 && minutes <= 1020 && (parts[1] === 0 || parts[1] === 30);
+    }
+
+    function allSlots() {
+        const slots = [];
+        for (let minutes = 540; minutes <= 1020; minutes += 30) {
+            const h = String(Math.floor(minutes / 60)).padStart(2, "0");
+            const m = String(minutes % 60).padStart(2, "0");
+            slots.push(`${h}:${m}`);
+        }
+        return slots;
+    }
+
+    function availableSlotsForDate(date, appointments, ignoreAppointmentId) {
+        const booked = new Set(
+            appointments
+                .filter((a) => a.appointment_date === date && a.status === "booked" && Number(a.id) !== Number(ignoreAppointmentId))
+                .map((a) => a.appointment_time)
+        );
+        return allSlots().filter((slot) => !booked.has(slot));
     }
 
     function setMessage(el, text, type) {
@@ -50,50 +84,69 @@
     }
 
     function updateAuthUi() {
-        const user = getUser();
-
         const statusEls = document.querySelectorAll("#auth-status");
         statusEls.forEach((el) => {
             if (!(el instanceof HTMLElement)) return;
-            el.textContent = user ? `Signed in as ${user.name} (${user.email})` : "Not signed in";
+            el.textContent = currentUser
+                ? `Signed in as ${currentUser.name} (${currentUser.email})`
+                : "Not signed in";
         });
 
         const forms = document.getElementById("auth-forms");
         const actions = document.getElementById("auth-actions");
-        if (forms) forms.style.display = user ? "none" : "grid";
-        if (actions) actions.style.display = user ? "flex" : "none";
+        if (forms) forms.style.display = currentUser ? "none" : "grid";
+        if (actions) actions.style.display = currentUser ? "flex" : "none";
 
-        const patientName = document.getElementById("patient_name");
-        if (patientName instanceof HTMLInputElement) {
-            patientName.value = user ? user.name : "";
+    }
+
+    function handleRegister(form, messageEl) {
+        const fd = new FormData(form);
+        const name = String(fd.get("name") || "").trim();
+        const email = String(fd.get("email") || "").trim().toLowerCase();
+        const password = String(fd.get("password") || "");
+
+        if (
+            name.toLowerCase() !== ADMIN_USER.name.toLowerCase() ||
+            email !== ADMIN_USER.email ||
+            password !== ADMIN_USER.password
+        ) {
+            throw new Error(`Register accepts only admin credentials: ${ADMIN_USER.name} / ${ADMIN_USER.email} / ${ADMIN_USER.password}`);
         }
-    }
 
-    async function handleRegister(form, messageEl) {
-        const fd = new FormData(form);
-        const payload = {
-            name: String(fd.get("name") || "").trim(),
-            email: String(fd.get("email") || "").trim(),
-            password: String(fd.get("password") || "")
-        };
-        const data = await api("/api/register", { method: "POST", body: JSON.stringify(payload) });
-        setAuth(data.token, data.user);
+        currentUser = { name: ADMIN_USER.name, email: ADMIN_USER.email };
+        saveSession(currentUser);
         updateAuthUi();
-        setMessage(messageEl, "Account created. You are signed in.", "success");
+        setMessage(messageEl, "Admin account accepted. You are signed in.", "success");
         form.reset();
     }
 
-    async function handleLogin(form, messageEl) {
+    function handleLogin(form, messageEl) {
         const fd = new FormData(form);
-        const payload = {
-            email: String(fd.get("email") || "").trim(),
-            password: String(fd.get("password") || "")
-        };
-        const data = await api("/api/login", { method: "POST", body: JSON.stringify(payload) });
-        setAuth(data.token, data.user);
+        const email = String(fd.get("email") || "").trim().toLowerCase();
+        const password = String(fd.get("password") || "");
+        if (email !== ADMIN_USER.email || password !== ADMIN_USER.password) {
+            throw new Error(`Invalid admin credentials. Use ${ADMIN_USER.email} / ${ADMIN_USER.password}`);
+        }
+
+        currentUser = { name: ADMIN_USER.name, email: ADMIN_USER.email };
+        saveSession(currentUser);
         updateAuthUi();
-        setMessage(messageEl, "Signed in successfully.", "success");
+        setMessage(messageEl, "Signed in successfully (admin mode).", "success");
         form.reset();
+    }
+
+    function tryPromptLogin() {
+        const email = prompt("Admin login email:", ADMIN_USER.email);
+        if (!email) return false;
+        const password = prompt("Admin login password:", ADMIN_USER.password);
+        if (!password) return false;
+        if (email.trim().toLowerCase() !== ADMIN_USER.email || password !== ADMIN_USER.password) {
+            return false;
+        }
+        currentUser = { name: ADMIN_USER.name, email: ADMIN_USER.email };
+        saveSession(currentUser);
+        updateAuthUi();
+        return true;
     }
 
     function initAuthCommon() {
@@ -103,11 +156,11 @@
         const messageEl = document.getElementById("message");
 
         if (registerForm instanceof HTMLFormElement) {
-            registerForm.addEventListener("submit", async (e) => {
+            registerForm.addEventListener("submit", (e) => {
                 e.preventDefault();
                 setMessage(messageEl, "", "");
                 try {
-                    await handleRegister(registerForm, messageEl);
+                    handleRegister(registerForm, messageEl);
                 } catch (err) {
                     setMessage(messageEl, err.message || "Registration failed.", "error");
                 }
@@ -115,11 +168,11 @@
         }
 
         if (loginForm instanceof HTMLFormElement) {
-            loginForm.addEventListener("submit", async (e) => {
+            loginForm.addEventListener("submit", (e) => {
                 e.preventDefault();
                 setMessage(messageEl, "", "");
                 try {
-                    await handleLogin(loginForm, messageEl);
+                    handleLogin(loginForm, messageEl);
                 } catch (err) {
                     setMessage(messageEl, err.message || "Login failed.", "error");
                 }
@@ -128,16 +181,18 @@
 
         if (logoutBtn instanceof HTMLButtonElement) {
             logoutBtn.addEventListener("click", () => {
-                clearAuth();
+                currentUser = null;
+                saveSession(null);
                 updateAuthUi();
                 setMessage(messageEl, "Logged out.", "success");
             });
         }
 
+        currentUser = loadSession();
         updateAuthUi();
     }
 
-    async function refreshSlots(date, selectEl, messageEl) {
+    function refreshSlots(date, selectEl, messageEl, ignoreAppointmentId) {
         if (!selectEl) return;
         selectEl.innerHTML = "";
 
@@ -149,28 +204,20 @@
             return;
         }
 
-        try {
-            const data = await api(`/api/slots?date=${encodeURIComponent(date)}`, { method: "GET" });
-            const slots = data.slots || [];
+        const slots = availableSlotsForDate(date, loadAppointments(), ignoreAppointmentId);
+        const placeholder = document.createElement("option");
+        placeholder.value = "";
+        placeholder.textContent = slots.length ? "Select a time" : "No slots available";
+        selectEl.appendChild(placeholder);
 
-            const placeholder = document.createElement("option");
-            placeholder.value = "";
-            placeholder.textContent = slots.length ? "Select a time" : "No slots available";
-            selectEl.appendChild(placeholder);
-
-            slots.forEach((t) => {
-                const opt = document.createElement("option");
-                opt.value = t;
-                opt.textContent = t;
-                selectEl.appendChild(opt);
-            });
-        } catch (err) {
-            setMessage(messageEl, err.message || "Failed to load slots.", "error");
+        slots.forEach((t) => {
             const opt = document.createElement("option");
-            opt.value = "";
-            opt.textContent = "Failed to load slots";
+            opt.value = t;
+            opt.textContent = t;
             selectEl.appendChild(opt);
-        }
+        });
+
+        setMessage(messageEl, "", "");
     }
 
     function initBookingPage() {
@@ -189,51 +236,68 @@
             });
         }
 
-        form.addEventListener("submit", async function (event) {
+        form.addEventListener("submit", function (event) {
             event.preventDefault();
 
-            const user = getUser();
-            if (!user || !getToken()) {
+            if (!currentUser) {
                 setMessage(message, "Please register or log in first.", "error");
                 return;
             }
 
             const formData = new FormData(form);
+            const patient_name = String(formData.get("patient_name") || "").trim();
             const appointment_date = String(formData.get("appointment_date") || "");
             const appointment_time = String(formData.get("appointment_time") || "");
 
-            if (!appointment_date || !appointment_time) {
-                setMessage(message, "Please select a date and time.", "error");
+            if (!patient_name || !appointment_date || !appointment_time) {
+                setMessage(message, "Please enter patient name, date, and time.", "error");
+                return;
+            }
+            if (!withinClinicHours(appointment_time)) {
+                setMessage(message, "Please choose a valid 30-minute slot between 09:00 and 17:00.", "error");
                 return;
             }
 
-            try {
-                await api("/api/appointments", {
-                    method: "POST",
-                    body: JSON.stringify({ appointment_date, appointment_time })
-                });
-                setMessage(message, "Appointment booked successfully.", "success");
-                if (dateEl instanceof HTMLInputElement && timeEl instanceof HTMLSelectElement) {
-                    await refreshSlots(dateEl.value, timeEl, message);
-                }
-            } catch (err) {
-                setMessage(message, err.message || "Booking failed.", "error");
+            const appointments = loadAppointments();
+            const duplicate = appointments.some(
+                (a) =>
+                    a.status === "booked" &&
+                    a.appointment_date === appointment_date &&
+                    a.appointment_time === appointment_time
+            );
+            if (duplicate) {
+                setMessage(message, "This time slot is already booked.", "error");
+                return;
+            }
+
+            appointments.push({
+                id: nextId(appointments),
+                patient_name,
+                appointment_date,
+                appointment_time,
+                status: "booked"
+            });
+            saveAppointments(appointments);
+            setMessage(message, "Appointment booked successfully.", "success");
+
+            if (dateEl instanceof HTMLInputElement && timeEl instanceof HTMLSelectElement) {
+                refreshSlots(dateEl.value, timeEl, message);
             }
         });
     }
 
-    async function renderMyAppointments(tbody, emptyState, messageEl) {
+    function renderAppointments(tbody, emptyState, messageEl) {
         tbody.innerHTML = "";
-        const user = getUser();
-        if (!user || !getToken()) {
+        if (!currentUser) {
             emptyState.style.display = "block";
+            setMessage(messageEl, "Log in as admin on this page to manage appointments.", "error");
             return;
         }
 
-        const data = await api("/api/appointments", { method: "GET" });
-        const appointments = data.appointments || [];
+        const appointments = sortAppointments(loadAppointments());
         if (appointments.length === 0) {
             emptyState.style.display = "block";
+            setMessage(messageEl, "", "");
             return;
         }
         emptyState.style.display = "none";
@@ -250,6 +314,7 @@
                 <td class="table-actions">
                     <button class="btn btn-secondary btn-sm" data-action="reschedule" data-id="${appt.id}" ${disabled} type="button">Reschedule</button>
                     <button class="btn btn-danger btn-sm" data-action="cancel" data-id="${appt.id}" ${disabled} type="button">Cancel</button>
+                    <button class="btn btn-danger btn-sm" data-action="delete" data-id="${appt.id}" type="button">Delete</button>
                 </td>
             `;
             tbody.appendChild(tr);
@@ -266,16 +331,28 @@
         const messageEl = document.getElementById("message");
 
         initAuthCommon();
+        if (!currentUser) {
+            const loggedIn = tryPromptLogin();
+            if (!loggedIn) {
+                setMessage(
+                    messageEl,
+                    `Use admin credentials to manage appointments: ${ADMIN_USER.email} / ${ADMIN_USER.password}`,
+                    "error"
+                );
+            } else {
+                setMessage(messageEl, "Signed in successfully.", "success");
+            }
+        }
 
-        async function safeRender() {
+        function safeRender() {
             try {
-                await renderMyAppointments(tbody, emptyState, messageEl);
+                renderAppointments(tbody, emptyState, messageEl);
             } catch (err) {
                 setMessage(messageEl, err.message || "Failed to load appointments.", "error");
             }
         }
 
-        tbody.addEventListener("click", async (event) => {
+        tbody.addEventListener("click", (event) => {
             const target = event.target;
             if (!(target instanceof HTMLElement)) return;
             const idAttr = target.getAttribute("data-id");
@@ -284,31 +361,72 @@
             const id = Number(idAttr);
 
             setMessage(messageEl, "", "");
+            if (!currentUser) {
+                const loggedIn = tryPromptLogin();
+                if (!loggedIn) {
+                    setMessage(messageEl, "Please log in first.", "error");
+                    return;
+                }
+            }
+
+            const appointments = loadAppointments();
+            const index = appointments.findIndex((a) => Number(a.id) === id);
+            if (index < 0) {
+                setMessage(messageEl, "Appointment not found.", "error");
+                return;
+            }
 
             try {
                 if (action === "cancel") {
                     if (!confirm("Cancel this appointment?")) return;
-                    await api(`/api/appointments/${id}`, { method: "DELETE" });
+                    appointments[index].status = "cancelled";
+                    saveAppointments(appointments);
                     setMessage(messageEl, "Appointment cancelled.", "success");
-                    await safeRender();
+                    safeRender();
+                    return;
+                }
+
+                if (action === "delete") {
+                    if (!confirm("Delete this appointment permanently?")) return;
+                    appointments.splice(index, 1);
+                    saveAppointments(appointments);
+                    setMessage(messageEl, "Appointment deleted.", "success");
+                    safeRender();
                     return;
                 }
 
                 if (action === "reschedule") {
-                    const date = prompt("New date (YYYY-MM-DD):");
+                    const currentAppt = appointments[index];
+                    const date = prompt("New date (YYYY-MM-DD):", currentAppt.appointment_date);
                     if (!date) return;
-
-                    const slots = await api(`/api/slots?date=${encodeURIComponent(date)}`, { method: "GET" });
-                    const slotList = (slots.slots || []).slice(0, 20).join(", ");
-                    const time = prompt(`New time (HH:MM). Available: ${slotList}${(slots.slots || []).length > 20 ? ", ..." : ""}`);
+                    if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+                        setMessage(messageEl, "Date format must be YYYY-MM-DD.", "error");
+                        return;
+                    }
+                    const time = prompt("New time (HH:MM):", currentAppt.appointment_time);
                     if (!time) return;
+                    if (!withinClinicHours(time)) {
+                        setMessage(messageEl, "Time must be a 30-minute slot between 09:00 and 17:00.", "error");
+                        return;
+                    }
+                    const conflict = appointments.some(
+                        (a) =>
+                            Number(a.id) !== id &&
+                            a.status === "booked" &&
+                            a.appointment_date === date &&
+                            a.appointment_time === time
+                    );
+                    if (conflict) {
+                        setMessage(messageEl, "That time slot is already booked.", "error");
+                        return;
+                    }
 
-                    await api(`/api/appointments/${id}/reschedule`, {
-                        method: "PATCH",
-                        body: JSON.stringify({ appointment_date: date, appointment_time: time })
-                    });
+                    appointments[index].appointment_date = date;
+                    appointments[index].appointment_time = time;
+                    appointments[index].status = "booked";
+                    saveAppointments(appointments);
                     setMessage(messageEl, "Appointment rescheduled.", "success");
-                    await safeRender();
+                    safeRender();
                 }
             } catch (err) {
                 setMessage(messageEl, err.message || "Action failed.", "error");
