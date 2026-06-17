@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- Admin page metadata and stylesheet -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clinic Booking Admin</title>
+    <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+    <!-- Admin container with wider layout for table -->
+    <div class="page page-wide">
+        <header class="site-header">
+            <p class="site-tag">Appointments</p>
+            <h1>All appointments</h1>
+            <p class="lead">Admin can reschedule, cancel, or delete any booking.</p>
+        </header>
+
+        <main class="card card-pad">
+            <!-- Top bar with auth status and navigation -->
+            <div class="card-topbar">
+                <div>
+                    <p id="auth-status" class="auth-status">Not signed in</p>
+                </div>
+                <div class="topbar-actions">
+                    <a class="link-muted" href="./index.html">← Back to booking</a>
+                    <button id="logout-btn" class="btn btn-secondary btn-sm" type="button">Log out</button>
+                </div>
+            </div>
+
+            <!-- Appointment management table -->
+            <div class="table-wrap">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Patient</th>
+                            <th>Date</th>
+                            <th>Time</th>
+                            <th>Status</th>
+                            <th class="th-actions">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="appointments-body"></tbody>
+                </table>
+            </div>
+            <!-- Empty state shown when there are no appointments -->
+            <p id="empty-state" class="empty-state">No appointments yet. Book one from the booking page.</p>
+
+            <footer class="card-footer">
+                <p id="message" class="message" aria-live="polite"></p>
+            </footer>
+        </main>
+    </div>
+
+    <!-- App logic shared by booking and admin pages -->
+    <script src="./app.js"></script>
+</body>
+</html>
